@@ -2,12 +2,12 @@
 # The API_*_TARGET values are baked into the build (next.config.ts rewrites),
 # so pass them as build args, e.g.
 #   docker build --build-arg API_AUTH_TARGET=http://gateway:8106 ... .
-FROM node:22-alpine AS deps
+FROM node:26-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 
-FROM node:22-alpine AS builder
+FROM node:26-alpine AS builder
 WORKDIR /app
 # next.config.ts turns these into rewrite rules, so they are resolved during
 # `npm run build`; override them with --build-arg when the backend is not on
@@ -65,7 +65,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
-FROM node:22-alpine AS runner
+FROM node:26-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
