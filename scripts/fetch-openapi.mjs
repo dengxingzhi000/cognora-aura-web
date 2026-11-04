@@ -4,8 +4,8 @@
  *
  * 用法:
  *   node scripts/api/fetch-openapi.mjs                       # 抓取默认主机
- *   node scripts/api/fetch-openapi.mjs 192.168.0.125         # 指定主机
- *   node scripts/api/fetch-openapi.mjs 192.168.0.125 --out docs/api
+ *   node scripts/fetch-openapi.mjs <host>                     # 指定主机
+ *   node scripts/fetch-openapi.mjs <host> --out openapi
  *
  * 说明:
  *   - 服务把 OpenAPI 文档发布在 /api/public/v3/api-docs (见

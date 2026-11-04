@@ -8,7 +8,7 @@
       "scm-auth-api": {
         "generatorName": "typescript-axios",
         "output": "#{cwd}/src/lib/api/generated/auth",
-        "inputSpec": "../docs/api/openapi-scm-auth.json",
+        "inputSpec": "openapi/openapi-scm-auth.json",
         "additionalProperties": {
           "withInterfaces": true,
           "useSingleRequestParameter": true,
@@ -24,7 +24,7 @@
       "scm-system-api": {
         "generatorName": "typescript-axios",
         "output": "#{cwd}/src/lib/api/generated/system",
-        "inputSpec": "../docs/api/openapi-scm-system.json",
+        "inputSpec": "openapi/openapi-scm-system.json",
         "additionalProperties": {
           "withInterfaces": true,
           "useSingleRequestParameter": true,
@@ -40,7 +40,7 @@
       "scm-product-api": {
         "generatorName": "typescript-axios",
         "output": "#{cwd}/src/lib/api/generated/product",
-        "inputSpec": "../docs/api/openapi-scm-product.json",
+        "inputSpec": "openapi/openapi-scm-product.json",
         "additionalProperties": {
           "withInterfaces": true,
           "useSingleRequestParameter": true,
@@ -56,7 +56,7 @@
       "scm-inventory-api": {
         "generatorName": "typescript-axios",
         "output": "#{cwd}/src/lib/api/generated/inventory",
-        "inputSpec": "../docs/api/openapi-scm-inventory.json",
+        "inputSpec": "openapi/openapi-scm-inventory.json",
         "additionalProperties": {
           "withInterfaces": true,
           "useSingleRequestParameter": true,
@@ -72,7 +72,7 @@
       "scm-order-api": {
         "generatorName": "typescript-axios",
         "output": "#{cwd}/src/lib/api/generated/order",
-        "inputSpec": "../docs/api/openapi-scm-order.json",
+        "inputSpec": "openapi/openapi-scm-order.json",
         "additionalProperties": {
           "withInterfaces": true,
           "useSingleRequestParameter": true,
