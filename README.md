@@ -7,7 +7,6 @@
 **一套 Next.js 应用，覆盖商品、库存、订单、仓储、采购、财务、物流、会员、营销与分析。**
 
 [![CI](https://img.shields.io/github/actions/workflow/status/dengxingzhi000/cognora-aura-web/ci.yml?branch=main&style=flat-square&logo=github&label=ci)](https://github.com/dengxingzhi000/cognora-aura-web/actions/workflows/ci.yml)
-[![CodeQL](https://img.shields.io/github/actions/workflow/status/dengxingzhi000/cognora-aura-web/codeql.yml?branch=main&style=flat-square&logo=github&label=codeql)](https://github.com/dengxingzhi000/cognora-aura-web/actions/workflows/codeql.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square)](./LICENSE)
 [![Node](https://img.shields.io/badge/node-22-339933?logo=node.js&logoColor=white&style=flat-square)](https://nodejs.org/)
 
