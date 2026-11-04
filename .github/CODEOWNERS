@@ -1,0 +1,8 @@
+# CODEOWNERS — auto review assignment.
+# Team handles (@CognoraAura/*) do not resolve on the personal account
+# dengxingzhi000, so this file uses the individual owner instead.
+* @dengxingzhi000
+
+/.github/ @dengxingzhi000
+/src/lib/api/ @dengxingzhi000
+/openapi/ @dengxingzhi000
