@@ -6,6 +6,8 @@
 
 **One Next.js 16 application. Twenty-plus backend domains. Real APIs, no mock screens.**
 
+[![CI](https://img.shields.io/github/actions/workflow/status/dengxingzhi000/cognora-aura-web/ci.yml?branch=main&style=flat-square&logo=github&label=ci)](https://github.com/dengxingzhi000/cognora-aura-web/actions/workflows/ci.yml)
+[![Issues](https://img.shields.io/github/issues/dengxingzhi000/cognora-aura-web?color=ff80eb&labelColor=black&style=flat-square&logo=github)](https://github.com/dengxingzhi000/cognora-aura-web/issues)
 [![Node](https://img.shields.io/badge/node-22-339933?logo=node.js&logoColor=white&style=flat-square)](https://nodejs.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs&logoColor=white&style=flat-square)](https://nextjs.org/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square)](./LICENSE)
@@ -398,6 +400,16 @@ or remap Grafana) instead of both at once.
 
 Backend architecture, service ports and database design live in
 [cognora-aura-platform](https://github.com/dengxingzhi000/cognora-aura-platform).
+
+## Star history
+
+<a href="https://www.star-history.com/?repos=dengxingzhi000%2Fcognora-aura-web&amp;type=date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=dengxingzhi000/cognora-aura-web&amp;type=date&amp;theme=dark&amp;legend=top-left" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=dengxingzhi000/cognora-aura-web&amp;type=date" />
+    <img alt="Cognora Aura Web GitHub star history" src="https://api.star-history.com/chart?repos=dengxingzhi000/cognora-aura-web&amp;type=date" />
+  </picture>
+</a>
 
 ## Related projects
 
