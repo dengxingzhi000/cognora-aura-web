@@ -51,7 +51,7 @@ export const systemService = {
       get<PageResult<UserDTO>>(`${SYSTEM_BASE}/users`, query),
     getById: (id: string) => get<UserDTO>(`${SYSTEM_BASE}/users/${id}`),
     create: (data: UserDTO) => post<void>(`${SYSTEM_BASE}/users`, data),
-    update: (id: string, data: UserDTO) =>
+    update: (id: string, data: Partial<UserDTO>) =>
       put<void>(`${SYSTEM_BASE}/users/${id}`, data),
     delete: (id: string) => del<void>(`${SYSTEM_BASE}/users/${id}`),
     changePassword: (data: {

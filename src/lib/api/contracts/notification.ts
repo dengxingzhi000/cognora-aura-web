@@ -35,3 +35,24 @@ export interface UserNotificationQuery {
   startTime?: string;
   endTime?: string;
 }
+
+/**
+ * `com.cognora.platform.notify.domain.entity.SysUserNotificationPreference`.
+ * `quietHoursStart`/`quietHoursEnd` are mapped to `LocalDateTime` over a `TIME`
+ * column, so they are displayed but not edited here.
+ */
+export interface NotificationPreferenceDTO {
+  id?: string;
+  userId?: string | null;
+  notificationType?: string | null;
+  channel?: string | null;
+  enabled?: boolean | null;
+  quietHoursStart?: string | null;
+  quietHoursEnd?: string | null;
+  createTime?: string | null;
+  updateTime?: string | null;
+}
+
+export type NotificationPreferenceList = NotificationPreferenceDTO[];
+
+export type NotificationPreferencePage = MpPage<NotificationPreferenceDTO>;

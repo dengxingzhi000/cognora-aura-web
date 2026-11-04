@@ -27,6 +27,12 @@ export const QUERY_KEYS = {
     ALL: ['notifications'] as const,
     LIST: (params?: unknown) => ['notifications', 'list', params] as const,
     UNREAD_COUNT: ['notifications', 'unread'] as const,
+    PREFERENCES: (userId: string) =>
+      ['notifications', 'preferences', userId] as const,
+  },
+  PROFILE: {
+    INFO: ['profile', 'userinfo'] as const,
+    PASSKEYS: ['profile', 'passkeys'] as const,
   },
   DASHBOARD: {
     STATS: ['dashboard', 'stats'] as const,
