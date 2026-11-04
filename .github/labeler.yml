@@ -1,0 +1,35 @@
+# Auto-label rules consumed by actions/labeler (.github/workflows/labeler.yml).
+frontend:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/**/*'
+
+api-contract:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'openapi/**/*'
+          - 'openapitools.json'
+
+build:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'Dockerfile'
+          - 'scripts/**/*'
+          - 'next.config.ts'
+          - 'package.json'
+          - 'package-lock.json'
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file: '.github/**/*'
+
+docs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.md'
+          - 'docs/**/*'
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'package-lock.json'
