@@ -1,6 +1,6 @@
 {
   "name": "@cognora/aura-web",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -13,13 +13,13 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "generate:api": "openapi-generator-cli generate",
+    "generate:api": "openapi-generator-cli generate --generator-key scm-auth-api && openapi-generator-cli generate --generator-key scm-system-api && openapi-generator-cli generate --generator-key scm-product-api && openapi-generator-cli generate --generator-key scm-inventory-api && openapi-generator-cli generate --generator-key scm-order-api",
     "generate:api:auth": "openapi-generator-cli generate --generator-key scm-auth-api",
     "generate:api:system": "openapi-generator-cli generate --generator-key scm-system-api",
     "generate:api:product": "openapi-generator-cli generate --generator-key scm-product-api",
     "generate:api:inventory": "openapi-generator-cli generate --generator-key scm-inventory-api",
     "generate:api:order": "openapi-generator-cli generate --generator-key scm-order-api",
-    "fetch:api": "node ../scripts/api/fetch-openapi.mjs"
+    "fetch:api": "node scripts/fetch-openapi.mjs"
   },
   "dependencies": {
     "@ant-design/cssinjs": "^2.1.2",
