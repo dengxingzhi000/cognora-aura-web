@@ -1,13 +1,17 @@
 name: CodeQL Security Scan
 
+# NOTE: this private repository does not have code scanning enabled (GitHub
+# Advanced Security is required for CodeQL on private repos), so the scan is
+# limited to the weekly schedule until the repository is published. Once code
+# scanning is enabled, restore the push/pull_request triggers below.
 on:
-  push:
-    branches: [main, master]
-  pull_request:
-    branches: [main, master]
   schedule:
     - cron: '17 6 * * 1'
   workflow_dispatch:
+  # push:
+  #   branches: [main, master]
+  # pull_request:
+  #   branches: [main, master]
 
 permissions:
   actions: read
