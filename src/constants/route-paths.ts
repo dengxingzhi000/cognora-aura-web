@@ -49,6 +49,7 @@ export const ROUTE_PATHS = {
   SETTINGS: {
     PROFILE: '/settings/profile',
     SECURITY: '/settings/security',
+    NOTIFICATIONS: '/settings/notifications',
     PREFERENCES: '/settings/preferences',
   },
 } as const
