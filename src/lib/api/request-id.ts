@@ -2,9 +2,9 @@
  * ID helpers for transport headers.
  *
  * `crypto.randomUUID()` is only exposed in **secure contexts**. The standalone
- * build is served over plain HTTP on a LAN address (`http://192.168.0.10:3000`),
- * so `crypto.randomUUID` is `undefined` there even though it exists on
- * `localhost`. `crypto.getRandomValues` is available in insecure contexts and
+ * build may be served over plain HTTP on a non-localhost host (for example a
+ * LAN address), so `crypto.randomUUID` is `undefined` there even though it
+ * exists on `localhost`. `crypto.getRandomValues` is available in insecure contexts and
  * is the fallback; a timestamp + user-agent hash + counter is only the last
  * resort for browsers that expose no `crypto` API at all.
  */

@@ -23,8 +23,8 @@ function isApiRequest(pathname: string): boolean {
 /**
  * The browser calls these paths same-origin, but next.config rewrites forward the
  * original request (including `Origin`) to the backend. Spring's CORS allow-list
- * only covers localhost, so a LAN deployment such as http://192.168.0.10:3000
- * gets `403 Invalid CORS request`. This is a server-side proxy hop, not a browser
+ * only covers localhost, so a deployment served from any other host (for
+ * example a LAN address) gets `403 Invalid CORS request`. This is a server-side proxy hop, not a browser
  * cross-origin call, so only a same-origin `Origin` is dropped; a cross-origin
  * caller keeps the header so the backend CORS policy can still apply.
  */

@@ -29,8 +29,8 @@ describe("createRandomId", () => {
   });
 
   it("falls back to getRandomValues on an insecure HTTP origin", () => {
-    // Production is served over http://192.168.0.10:3000 鈥?crypto.randomUUID is
-    // undefined there, but crypto.getRandomValues is still available.
+    // Production may be served over plain HTTP on a non-localhost host, where
+    // crypto.randomUUID is undefined but crypto.getRandomValues still works.
     const getRandomValuesSpy = vi.fn(getRandomValues);
     stubCrypto({ getRandomValues: getRandomValuesSpy });
 
