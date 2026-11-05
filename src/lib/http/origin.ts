@@ -3,8 +3,8 @@
  *
  * The browser calls the gateway paths same-origin, but `next.config` rewrites
  * forward the original request (including `Origin`) to the backend. Spring's CORS
- * allow-list only covers localhost, so a LAN deployment such as
- * http://192.168.0.10:3000 gets `403 Invalid CORS request` unless the
+ * allow-list only covers localhost, so a deployment served from any other host
+ * (for example a LAN address) gets `403 Invalid CORS request` unless the
  * same-origin `Origin` is dropped.
  *
  * Only a same-origin `Origin` is removed: a genuinely cross-origin caller keeps
