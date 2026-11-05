@@ -6,6 +6,8 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-11-05
+
 ### Added
 
 - Personal center: `/settings/profile`, `/settings/security` and `/settings/notifications`.
@@ -21,7 +23,14 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - The four backend endpoints still missing for these screens are recorded in
   [docs/BACKEND_GAPS.md](docs/BACKEND_GAPS.md): login sessions, self-scoped
-  logout-others, platform `system/config`, and a non-admin self-profile update.
+  logout-others, platform `system/config`, and a non-admin self-profile update
+  (`#20`).
+
+### Changed
+
+- Removed the concrete private LAN address from the proxy comments and the
+  origin/request-id tests. The origin fixtures now use `127.0.0.1`, and the
+  request-id test comment no longer carries the broken UTF-8 dash (`#21`).
 
 ## [0.2.0] - 2026-11-04
 
