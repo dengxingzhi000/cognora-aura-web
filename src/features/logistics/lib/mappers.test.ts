@@ -17,8 +17,8 @@ describe('logistics mappers', () => {
       waybillNo: 'WB-001',
       orderNo: 'SO-001',
       status: 2,
-      signTime: '2026-11-06T03:20:00Z',
-      createTime: '2026-11-05T02:00:00Z',
+      signTime: '2026-11-06T03:20:00',
+      createTime: '2026-11-05T02:00:00',
     })
     expect(waybill.status).toBe(2)
     expect(waybill.statusLabel).toBe('运输中')
@@ -61,7 +61,7 @@ describe('logistics mappers', () => {
   it('carries the tracking source and resolved status label', () => {
     const event = toTrackingEvent({
       id: 'tr-1',
-      trackTime: '2026-11-06T04:10:00Z',
+      trackTime: '2026-11-06T12:10:00',
       trackStatus: 'OUT_FOR_DELIVERY',
       source: 'CARRIER',
       operator: 'courier',
