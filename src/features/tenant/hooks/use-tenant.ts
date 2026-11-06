@@ -30,6 +30,7 @@ export const tenantKeys = {
   quotas: (tenantId: string) => ["tenant", "quotas", tenantId] as const,
   features: (tenantId: string) => ["tenant", "features", tenantId] as const,
   configs: (tenantId: string) => ["tenant", "configs", tenantId] as const,
+  allConfigs: ["tenant", "configs", "all"] as const,
   logs: (tenantId: string) => ["tenant", "logs", tenantId] as const,
   packages: (query: TenantPackagePageQuery) =>
     ["tenant", "packages", query] as const,
@@ -240,6 +241,19 @@ export function useTenantConfigs(tenantId: string, enabled = true) {
     queryKey: tenantKeys.configs(tenantId),
     queryFn: () => tenantApiService.pageConfigs(query),
     enabled: enabled && !!tenantId,
+  });
+}
+
+/**
+ * 读取全部租户配置，用于区分平台级（tenant_id=null）与当前租户覆盖。
+ * 后端没有「只看平台级」的查询参数，因此只能取回后在前端拆分。
+ */
+export function useAllTenantConfigs(enabled = true) {
+  const query: TenantConfigPageQuery = { page: 1, size: 200 };
+  return useQuery({
+    queryKey: tenantKeys.allConfigs,
+    queryFn: () => tenantApiService.pageConfigs(query),
+    enabled,
   });
 }
 

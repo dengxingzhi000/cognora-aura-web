@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { BackendPendingNote } from "@/components/ui/backend-pending-note";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -33,6 +34,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { ReconciliationRecordDTO } from "@/lib/api/contracts/finance";
 import { useAuthStore } from "@/stores/useAuthStore";
 
@@ -44,6 +50,7 @@ import {
   useReconciliationPage,
   useUpdateReconciliation,
 } from "../hooks";
+import { formatMoney } from "../lib/money";
 
 const PAGE_SIZE = 20;
 const ALL = "__all__";
@@ -64,9 +71,6 @@ const PARTY_TYPE: Record<string, string> = {
   PLATFORM: "平台",
   OTHER: "其他",
 };
-
-const currency = (value?: number | null) =>
-  value === null || value === undefined ? "-" : `¥${value.toLocaleString()}`;
 
 const formatDateTime = (value?: string | null) =>
   value ? value.replace("T", " ").slice(0, 16) : "-";
@@ -123,13 +127,19 @@ function toForm(record: ReconciliationRecordDTO): ReconForm {
 export function ReconciliationWorkbench() {
   const storeUser = useAuthStore((state) => state.user);
   const [page, setPage] = useState(1);
-  const [draft, setDraft] = useState({ keyword: "", status: ALL, hasDiff: ALL });
+  const [draft, setDraft] = useState({
+    keyword: "",
+    reconciliationPeriod: "",
+    status: ALL,
+    hasDiff: ALL,
+  });
   const [applied, setApplied] = useState(draft);
   const [recordId, setRecordId] = useState("");
   const listQuery = useReconciliationPage({
     page,
     size: PAGE_SIZE,
     keyword: applied.keyword || undefined,
+    reconciliationPeriod: applied.reconciliationPeriod || undefined,
     status: applied.status === ALL ? undefined : Number(applied.status),
     hasDiff: applied.hasDiff === ALL ? undefined : applied.hasDiff === "true",
   });
@@ -205,8 +215,13 @@ export function ReconciliationWorkbench() {
         eyebrow="财务管理"
         title="对账管理"
         description="按账期与往来方检索对账记录，比较双方金额并完成对账确认"
-        actions={<Button onClick={openCreate}>新建对账记录</Button>}
+        actions={<Button onClick={openCreate}>发起对账</Button>}
       />
+
+      <BackendPendingNote>
+        后端对账记录没有「差异类型」字段，也没有驳回端点：差异类型筛选与驳回操作
+        暂不可用；差异筛选仅支持有/无差异。
+      </BackendPendingNote>
 
       <TablePanel>
         <TableToolbar>
@@ -221,6 +236,14 @@ export function ReconciliationWorkbench() {
                 setPage(1);
               }
             }}
+          />
+          <Input
+            className="h-7 w-36 text-xs"
+            placeholder="账期，如 2026-09"
+            value={draft.reconciliationPeriod}
+            onChange={(event) =>
+              setDraft({ ...draft, reconciliationPeriod: event.target.value })
+            }
           />
           <Select
             value={draft.status}
@@ -251,6 +274,20 @@ export function ReconciliationWorkbench() {
               <SelectItem value="false">无差异</SelectItem>
             </SelectContent>
           </Select>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span tabIndex={0} className="cursor-not-allowed">
+                <Select disabled>
+                  <SelectTrigger size="sm" className="w-36 text-xs">
+                    <SelectValue placeholder="差异类型（待后端上线）" />
+                  </SelectTrigger>
+                </Select>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              后端对账记录没有差异类型字段，该筛选待后端上线
+            </TooltipContent>
+          </Tooltip>
           <Button
             size="sm"
             variant="outline"
@@ -265,7 +302,12 @@ export function ReconciliationWorkbench() {
             size="sm"
             variant="ghost"
             onClick={() => {
-              const empty = { keyword: "", status: ALL, hasDiff: ALL };
+              const empty = {
+                keyword: "",
+                reconciliationPeriod: "",
+                status: ALL,
+                hasDiff: ALL,
+              };
               setDraft(empty);
               setApplied(empty);
               setPage(1);
@@ -313,15 +355,15 @@ export function ReconciliationWorkbench() {
                       </div>
                     </TableCell>
                     <TableCell>{row.reconciliationPeriod ?? "-"}</TableCell>
-                    <TableCell numeric>{currency(row.ourTotalAmount)}</TableCell>
-                    <TableCell numeric>{currency(row.theirTotalAmount)}</TableCell>
+                    <TableCell numeric>{formatMoney(row.ourTotalAmount)}</TableCell>
+                    <TableCell numeric>{formatMoney(row.theirTotalAmount)}</TableCell>
                     <TableCell
                       numeric
                       className={
                         row.hasDiff ? "text-[var(--color-error-text)]" : undefined
                       }
                     >
-                      {currency(row.diffAmount)}
+                      {formatMoney(row.diffAmount)}
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge variant={status.variant}>{status.label}</Badge>
@@ -417,6 +459,18 @@ export function ReconciliationWorkbench() {
               >
                 确认对账
               </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span tabIndex={0} className="cursor-not-allowed">
+                    <Button size="sm" variant="outline" disabled>
+                      驳回
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  后端未提供对账驳回端点（待后端上线）
+                </TooltipContent>
+              </Tooltip>
               <Button
                 size="sm"
                 variant="destructive"
@@ -441,32 +495,32 @@ export function ReconciliationWorkbench() {
                 <tr className="border-b border-[var(--color-border-secondary)]">
                   <td className="py-1.5 pr-4">应结总额</td>
                   <td className="py-1.5 pr-4 text-right tabular-nums">
-                    {currency(record.ourTotalAmount)}
+                    {formatMoney(record.ourTotalAmount)}
                   </td>
                   <td className="py-1.5 pr-4 text-right tabular-nums">
-                    {currency(record.theirTotalAmount)}
+                    {formatMoney(record.theirTotalAmount)}
                   </td>
                   <td className="py-1.5 text-right tabular-nums">
-                    {currency(record.diffAmount)}
+                    {formatMoney(record.diffAmount)}
                   </td>
                 </tr>
                 <tr className="border-b border-[var(--color-border-secondary)]">
                   <td className="py-1.5 pr-4">已付金额</td>
                   <td className="py-1.5 pr-4 text-right tabular-nums">
-                    {currency(record.ourPaidAmount)}
+                    {formatMoney(record.ourPaidAmount)}
                   </td>
                   <td className="py-1.5 pr-4 text-right tabular-nums">
-                    {currency(record.theirPaidAmount)}
+                    {formatMoney(record.theirPaidAmount)}
                   </td>
                   <td className="py-1.5 text-right tabular-nums">-</td>
                 </tr>
                 <tr>
                   <td className="py-1.5 pr-4">未付金额</td>
                   <td className="py-1.5 pr-4 text-right tabular-nums">
-                    {currency(record.ourUnpaidAmount)}
+                    {formatMoney(record.ourUnpaidAmount)}
                   </td>
                   <td className="py-1.5 pr-4 text-right tabular-nums">
-                    {currency(record.theirUnpaidAmount)}
+                    {formatMoney(record.theirUnpaidAmount)}
                   </td>
                   <td className="py-1.5 text-right tabular-nums">-</td>
                 </tr>
