@@ -32,6 +32,7 @@ export const QUERY_KEYS = {
   },
   PROFILE: {
     INFO: ['profile', 'userinfo'] as const,
+    SESSIONS: ['profile', 'sessions'] as const,
     PASSKEYS: ['profile', 'passkeys'] as const,
   },
   DASHBOARD: {

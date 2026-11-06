@@ -13,8 +13,11 @@ import type {
   PermissionDTO,
   RoleDTO,
   RoleQuery,
+  SelfProfileUpdateRequest,
   StatusDictDTO,
   StatusTransitionDTO,
+  SystemConfigDTO,
+  SystemConfigUpsertRequest,
   TemporaryRoleGrantDTO,
   TransitionCheckDTO,
   TransitionResultDTO,
@@ -53,6 +56,12 @@ export const systemService = {
     create: (data: UserDTO) => post<void>(`${SYSTEM_BASE}/users`, data),
     update: (id: string, data: Partial<UserDTO>) =>
       put<void>(`${SYSTEM_BASE}/users/${id}`, data),
+    /**
+     * Self-service profile update. Unlike `PUT /users/{id}` it needs no
+     * `system:user:edit` and cannot target another account.
+     */
+    updateMe: (data: SelfProfileUpdateRequest) =>
+      put<void>(`${SYSTEM_BASE}/users/me`, data),
     delete: (id: string) => del<void>(`${SYSTEM_BASE}/users/${id}`),
     changePassword: (data: {
       oldPassword: string;
@@ -158,6 +167,13 @@ export const systemService = {
       }),
     apiPermissions: () =>
       get<ApiPermissionDTO[]>(`${SYSTEM_BASE}/permissions/api`),
+  },
+
+  /** Platform-level parameters with optional per-tenant overrides (docs/BACKEND_GAPS.md §3). */
+  config: {
+    list: () => get<SystemConfigDTO[]>(`${SYSTEM_BASE}/config`),
+    upsert: (data: SystemConfigUpsertRequest) =>
+      put<SystemConfigDTO>(`${SYSTEM_BASE}/config`, data),
   },
 
   /**

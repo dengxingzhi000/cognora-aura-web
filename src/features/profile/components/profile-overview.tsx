@@ -37,8 +37,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toApiError } from "@/lib/api/envelope";
-import { usePermission } from "@/hooks/use-permission";
 import { useUpdateProfile, useProfile } from "../hooks";
+import { diffProfile } from "../lib/profile-update";
 
 const profileSchema = z.object({
   realName: z
@@ -64,6 +64,7 @@ const profileSchema = z.object({
     .refine((value) => value === "" || /^https?:\/\/\S+$/.test(value), {
       message: "请输入以 http(s):// 开头的图片地址",
     }),
+  timezone: z.string().trim().max(64, "最多 64 个字符"),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -95,12 +96,9 @@ const InfoRow = ({
 
 export default function ProfileOverview() {
   const locale = useLocale();
-  const { hasPermission } = usePermission();
   const { data, isLoading, isError, error, refetch } = useProfile();
   const updateProfile = useUpdateProfile();
   const [open, setOpen] = useState(false);
-
-  const canEdit = hasPermission("system:user:edit");
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -109,20 +107,37 @@ export default function ProfileOverview() {
       email: data?.email ?? "",
       phone: data?.phone ?? "",
       avatar: data?.avatar ?? "",
+      timezone: data?.timezone ?? "",
     },
   });
 
   const onSubmit = form.handleSubmit(async (values) => {
     if (!data) return;
-    await updateProfile.mutateAsync({
-      userId: data.userId,
-      values: {
-        realName: values.realName,
-        email: values.email || undefined,
-        phone: values.phone || undefined,
-        avatar: values.avatar || undefined,
-      },
-    });
+
+    // Whitelisted fields only. `timezone` is sent only when userinfo exposes it,
+    // so we never invent a value the backend did not give us.
+    const current = {
+      realName: data.realName ?? data.username ?? "",
+      email: data.email ?? "",
+      phone: data.phone ?? "",
+      avatar: data.avatar ?? "",
+      ...(data.timezone !== undefined ? { timezone: data.timezone } : {}),
+    };
+    const next = {
+      realName: values.realName,
+      email: values.email,
+      phone: values.phone,
+      avatar: values.avatar,
+      ...(data.timezone !== undefined ? { timezone: values.timezone } : {}),
+    };
+
+    const changes = diffProfile(current, next);
+    if (Object.keys(changes).length === 0) {
+      setOpen(false);
+      return;
+    }
+
+    await updateProfile.mutateAsync(changes);
     setOpen(false);
   });
 
@@ -182,95 +197,104 @@ export default function ProfileOverview() {
           ) : (
             <p className="text-muted-foreground text-xs">未分配角色</p>
           )}
-          {canEdit ? (
-            <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" variant="outline" className="mt-1">
-                  编辑资料
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>编辑个人资料</DialogTitle>
-                  <DialogDescription>
-                    通过用户更新接口修改头像、姓名与联系方式。
-                  </DialogDescription>
-                </DialogHeader>
-                <Form {...form}>
-                  <form onSubmit={onSubmit} className="space-y-3">
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" variant="outline" className="mt-1">
+                编辑资料
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>编辑个人资料</DialogTitle>
+                <DialogDescription>
+                  只提交本人可修改的字段，接口为 PUT /api/system/users/me，无需管理员权限。
+                </DialogDescription>
+              </DialogHeader>
+              <Form {...form}>
+                <form onSubmit={onSubmit} className="space-y-3">
+                  <FormField
+                    control={form.control}
+                    name="realName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>姓名</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="请输入姓名" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>邮箱</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="email" placeholder="name@example.com" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>手机号</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="11 位手机号" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="avatar"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>头像地址</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="https://..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {data.timezone !== undefined && (
                     <FormField
                       control={form.control}
-                      name="realName"
+                      name="timezone"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>姓名</FormLabel>
+                          <FormLabel>时区</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="请输入姓名" />
+                            <Input {...field} placeholder="例如 Asia/Shanghai" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>邮箱</FormLabel>
-                          <FormControl>
-                            <Input {...field} type="email" placeholder="name@example.com" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>手机号</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="11 位手机号" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="avatar"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>头像地址</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="https://..." />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <DialogFooter>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setOpen(false)}
-                      >
-                        取消
-                      </Button>
-                      <Button type="submit" disabled={updateProfile.isPending}>
-                        {updateProfile.isPending ? "保存中…" : "保存"}
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </Form>
-              </DialogContent>
-            </Dialog>
-          ) : (
-            <p className="text-muted-foreground mt-1 text-xs">
-              资料编辑需要 system:user:edit 权限，当前账号暂无。
-            </p>
-          )}
+                  )}
+                  <DialogFooter>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setOpen(false)}
+                    >
+                      取消
+                    </Button>
+                    <Button type="submit" disabled={updateProfile.isPending}>
+                      {updateProfile.isPending ? "保存中…" : "保存"}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
         </CardContent>
       </Card>
 

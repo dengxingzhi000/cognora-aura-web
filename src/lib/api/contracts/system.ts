@@ -45,6 +45,41 @@ export interface UserQuery extends PageQuery {
   status?: number;
 }
 
+/** Whitelisted fields a signed-in user may change on their own record. */
+export interface SelfProfileUpdateRequest {
+  realName?: string;
+  avatar?: string;
+  email?: string;
+  phone?: string;
+  timezone?: string;
+}
+
+export type SystemConfigValueType = "STRING" | "NUMBER" | "BOOLEAN" | "JSON";
+
+/** PLATFORM = platform-wide default (read-only); TENANT = override for the current tenant. */
+export type SystemConfigScope = "PLATFORM" | "TENANT";
+
+export interface SystemConfigDTO {
+  configKey: string;
+  configValue: string;
+  valueType?: SystemConfigValueType;
+  description?: string;
+  isPublic?: boolean;
+  updateTime?: string;
+  scope?: SystemConfigScope;
+  tenantId?: string | null;
+}
+
+/** The frontend only ever writes tenant overrides; platform values stay read-only. */
+export interface SystemConfigUpsertRequest {
+  configKey: string;
+  configValue: string;
+  valueType?: SystemConfigValueType;
+  description?: string;
+  isPublic?: boolean;
+  scope: "TENANT";
+}
+
 export interface RoleDTO {
   id: string;
   tenantId?: string;

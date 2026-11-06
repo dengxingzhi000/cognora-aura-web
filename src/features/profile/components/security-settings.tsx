@@ -5,7 +5,7 @@ import { useLocale } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { KeyRound, MonitorSmartphone, ShieldOff } from "lucide-react";
+import { KeyRound, Laptop, LogOut, MonitorSmartphone } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,12 +35,16 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { isEndpointUnavailable } from "@/lib/api/availability";
 import { toApiError } from "@/lib/api/envelope";
 import type { WebAuthnCredentialDTO } from "@/lib/api/contracts/auth";
+import { UnavailableCard } from "@/features/settings/components/unavailable-card";
 import {
   useChangePassword,
   useDeletePasskey,
   useDeactivatePasskey,
+  useLoginSessions,
+  useLogoutOtherSessions,
   usePasskeys,
   useRenamePasskey,
 } from "../hooks";
@@ -300,32 +304,156 @@ function PasskeyCard() {
   );
 }
 
+const DEVICE_TYPE_LABELS: Record<string, string> = {
+  web: "浏览器",
+  mobile: "移动端",
+  desktop: "桌面客户端",
+};
+
+/**
+ * Self-service sessions. Until the backend ships `GET /api/auth/sessions`
+ * the whole card degrades to「暂不可用」— the admin force-logout endpoint is
+ * not used as a fallback because it requires `system:user:edit` and would kick
+ * the user's own session too.
+ */
+function SessionCard() {
+  const locale = useLocale();
+  const { data, isLoading, isError, error, refetch } = useLoginSessions();
+  const logoutOthers = useLogoutOtherSessions();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const sessions = data ?? [];
+  const otherSessions = sessions.filter((session) => !session.current);
+
+  if (isError && isEndpointUnavailable(error)) {
+    return (
+      <UnavailableCard
+        title="登录会话 / 退出其他设备"
+        reason="后端尚未提供当前用户的登录会话接口，无法查看设备列表或退出其他设备。"
+        needed="GET /api/auth/sessions、POST /api/auth/sessions/logout-others"
+      />
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Laptop className="size-4" />
+              登录会话 / 退出其他设备
+            </CardTitle>
+            <CardDescription>
+              数据来自 GET /api/auth/sessions；当前设备会被标记且不可退出。
+            </CardDescription>
+          </div>
+          {!isLoading && !isError && sessions.length > 0 && (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={!otherSessions.length || logoutOthers.isPending}
+              onClick={() => setConfirmOpen(true)}
+            >
+              <LogOut className="size-3.5" />
+              退出其他设备
+            </Button>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="space-y-2">
+            <Skeleton className="h-14 w-full rounded-lg" />
+            <Skeleton className="h-14 w-full rounded-lg" />
+          </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center gap-2 py-6 text-center">
+            <p className="text-sm font-medium">登录会话加载失败</p>
+            <p className="text-muted-foreground text-xs">
+              {toApiError(error).message}
+            </p>
+            <Button variant="outline" size="sm" onClick={() => void refetch()}>
+              重试
+            </Button>
+          </div>
+        ) : !sessions.length ? (
+          <div className="border-border text-muted-foreground rounded-lg border border-dashed px-4 py-8 text-center text-xs">
+            当前没有可展示的登录会话。
+          </div>
+        ) : (
+          <>
+            <div className="divide-border divide-y">
+              {sessions.map((session) => (
+                <div
+                  key={session.sessionId}
+                  className="flex flex-wrap items-center justify-between gap-3 py-3"
+                >
+                  <div className="min-w-0">
+                    <p className="flex items-center gap-2 text-sm font-medium">
+                      {session.deviceName ||
+                        DEVICE_TYPE_LABELS[session.deviceType ?? ""] ||
+                        "未知设备"}
+                      {session.current && <Badge>当前设备</Badge>}
+                    </p>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {[
+                        session.deviceType
+                          ? (DEVICE_TYPE_LABELS[session.deviceType] ??
+                            session.deviceType)
+                          : null,
+                        session.ip,
+                        session.location,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ") || "—"}
+                    </p>
+                    <p className="text-muted-foreground mt-0.5 text-xs">
+                      最后活跃 {formatTime(session.lastActiveAt, locale)}
+                    </p>
+                  </div>
+                  <span className="text-muted-foreground text-xs">
+                    {session.current
+                      ? "当前设备不可退出"
+                      : `登录于 ${formatTime(session.createdAt, locale)}`}
+                  </span>
+                </div>
+              ))}
+            </div>
+            {!otherSessions.length && (
+              <p className="text-muted-foreground mt-3 text-xs">
+                当前仅此设备登录，无需退出其他设备。
+              </p>
+            )}
+          </>
+        )}
+      </CardContent>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="退出其他设备"
+        description={`将退出 ${otherSessions.length} 个其他设备，当前设备的登录会保留。`}
+        confirmText="退出其他设备"
+        destructive
+        pending={logoutOthers.isPending}
+        onOpenChange={setConfirmOpen}
+        onConfirm={() => {
+          void logoutOthers
+            .mutateAsync()
+            .then(() => setConfirmOpen(false))
+            .catch(() => setConfirmOpen(false));
+        }}
+      />
+    </Card>
+  );
+}
+
 export default function SecuritySettings() {
   return (
     <div className="space-y-4">
       <ChangePasswordCard />
       <PasskeyCard />
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ShieldOff className="size-4" />
-            登录会话 / 退出其他设备
-          </CardTitle>
-          <CardDescription>暂未开放</CardDescription>
-        </CardHeader>
-        <CardContent className="text-muted-foreground space-y-1 text-xs">
-          <p>
-            后端目前只有管理员接口
-            「POST /auth/api/auth/force-logout/{"{userId}"}」（需
-            「system:user:edit」），没有面向当前用户的会话列表与「退出其他设备」接口。
-          </p>
-          <p>
-            需要的后端端点：「GET /api/auth/sessions」、
-            「DELETE /api/auth/sessions/{"{sessionId}"}」。
-          </p>
-        </CardContent>
-      </Card>
+      <SessionCard />
     </div>
   );
 }
