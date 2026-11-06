@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { useAdjustStock, useInitStock, useInventoryList, useTransferStock } from "../hooks";
+import { previewAdjustment, previewTransfer } from "../lib/reservation";
 import type { InventoryItem, StockLevel } from "../types";
 
 const PAGE_SIZE = 20;
@@ -112,6 +113,16 @@ export default function InventoryList() {
     skuIds,
     status,
   });
+
+  const adjustQuantity = Form.useWatch("quantity", form);
+  const adjustType = Form.useWatch("adjustType", form);
+  const transferQuantity = Form.useWatch("quantity", transferForm);
+  const adjustPreview = adjustTarget
+    ? previewAdjustment(adjustTarget, Number(adjustQuantity) || 0)
+    : null;
+  const transferPreview = transferTarget
+    ? previewTransfer(transferTarget, Number(transferQuantity) || 0)
+    : null;
 
   const rows = data?.records ?? [];
   const total = data?.total ?? 0;
@@ -383,6 +394,44 @@ export default function InventoryList() {
               precision={0}
             />
           </Form.Item>
+          {adjustPreview && (
+            <div className="mb-4 rounded-lg border border-[var(--color-border-secondary)] px-3 py-2 text-[11px]">
+              <div className="flex items-center justify-between py-0.5">
+                <span className="text-muted-foreground">调整类型</span>
+                <span className="font-medium">
+                  {ADJUST_TYPE_LABELS[Number(adjustType) || 6]}（
+                  {Number(adjustQuantity) > 0 ? "+" : ""}
+                  {Number(adjustQuantity) || 0}）
+                </span>
+              </div>
+              <div className="flex items-center justify-between py-0.5">
+                <span className="text-muted-foreground">可用库存</span>
+                <span className="font-medium tabular-nums">
+                  {adjustPreview.availableBefore} →{" "}
+                  <span
+                    className={
+                      adjustPreview.availableAfter < 0
+                        ? "text-[var(--color-error)]"
+                        : "text-[var(--color-success)]"
+                    }
+                  >
+                    {adjustPreview.availableAfter}
+                  </span>
+                </span>
+              </div>
+              <div className="flex items-center justify-between py-0.5">
+                <span className="text-muted-foreground">总库存</span>
+                <span className="font-medium tabular-nums">
+                  {adjustPreview.totalBefore} → {adjustPreview.totalAfter}
+                </span>
+              </div>
+              {adjustPreview.availableAfter < 0 && (
+                <div className="mt-1 text-[var(--color-error)]">
+                  调整后可用库存为负，后端会拒绝本次提交。
+                </div>
+              )}
+            </div>
+          )}
           <Form.Item name="remark" label="备注">
             <AntInput.TextArea rows={2} maxLength={200} />
           </Form.Item>
@@ -415,6 +464,36 @@ export default function InventoryList() {
           >
             <InputNumber style={{ width: "100%" }} min={1} max={1000000} precision={0} />
           </Form.Item>
+          {transferPreview && (
+            <div className="mb-4 rounded-lg border border-[var(--color-border-secondary)] px-3 py-2 text-[11px]">
+              <div className="flex items-center justify-between py-0.5">
+                <span className="text-muted-foreground">源仓可用库存</span>
+                <span className="font-medium tabular-nums">
+                  {transferPreview.sourceAvailableBefore} →{" "}
+                  <span
+                    className={
+                      transferPreview.feasible
+                        ? "text-[var(--color-success)]"
+                        : "text-[var(--color-error)]"
+                    }
+                  >
+                    {transferPreview.sourceAvailableAfter}
+                  </span>
+                </span>
+              </div>
+              <div className="flex items-center justify-between py-0.5">
+                <span className="text-muted-foreground">目标仓预计增加</span>
+                <span className="font-medium tabular-nums">
+                  +{transferPreview.quantity}
+                </span>
+              </div>
+              {!transferPreview.feasible && (
+                <div className="mt-1 text-[var(--color-error)]">
+                  调拨数量必须大于 0 且不超过源仓可用库存。
+                </div>
+              )}
+            </div>
+          )}
           <Form.Item name="remark" label="备注">
             <AntInput.TextArea rows={2} maxLength={200} />
           </Form.Item>

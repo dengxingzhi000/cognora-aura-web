@@ -54,6 +54,8 @@ export const appMenuItems: MenuItem[] = [
   ]),
   getItem('库存管理', 'group-inventory', <InboxOutlined />, [
     getItem('库存列表', '/inventory'),
+    getItem('预占管理', '/inventory/reservations'),
+    getItem('库存流水', '/inventory/movements'),
     getItem('库存预警', '/inventory/alerts'),
   ]),
   getItem('仓库管理', 'group-warehouse', <ApartmentOutlined />, [
@@ -75,6 +77,7 @@ export const appMenuItems: MenuItem[] = [
   ]),
   getItem('物流管理', 'group-logistics', <CarOutlined />, [
     getItem('运单管理', '/logistics'),
+    getItem('运费对账', '/logistics/reconciliation'),
     getItem('物流跟踪', '/logistics/tracking'),
     getItem('承运商管理', '/logistics/carrier'),
   ]),

@@ -90,3 +90,47 @@ export function useInitStock() {
     onError: (error) => message.error(toApiError(error).message),
   })
 }
+
+/** Real `check` + `quantity` lookup; the backend has no reservation list endpoint. */
+export function useReservationLookup() {
+  return useMutation({
+    mutationFn: (businessKey: string) => inventoryService.lookupReservation(businessKey),
+    onError: (error) => message.error(toApiError(error).message),
+  })
+}
+
+export function useConfirmReservation() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (businessKey: string) => inventoryService.confirmReservation(businessKey),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['inventory'] })
+      message.success('预占已确认并扣减库存')
+    },
+    onError: (error) => message.error(toApiError(error).message),
+  })
+}
+
+export function useReleaseReservation() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (businessKey: string) => inventoryService.releaseReservation(businessKey),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['inventory'] })
+      message.success('预占已释放')
+    },
+    onError: (error) => message.error(toApiError(error).message),
+  })
+}
+
+export function useReleaseExpiredReservations() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => inventoryService.releaseExpiredReservations(),
+    onSuccess: (released) => {
+      qc.invalidateQueries({ queryKey: ['inventory'] })
+      message.success(`已释放 ${released} 条过期预占`)
+    },
+    onError: (error) => message.error(toApiError(error).message),
+  })
+}

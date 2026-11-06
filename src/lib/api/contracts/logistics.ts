@@ -1,6 +1,9 @@
 import type { MpPage } from "./page";
 
-/** `com.cognora.lms.logistics.domain.entity.TmsWaybill`. */
+/**
+ * `com.cognora.lms.logistics.domain.entity.TmsWaybill`.
+ * Status is the backend `WaybillStatus` code 0–6, never a display string.
+ */
 export interface TmsWaybillDTO {
   id: string;
   waybillNo?: string | null;
@@ -17,11 +20,22 @@ export interface TmsWaybillDTO {
   /** JSONB object serialized as a string. */
   receiverAddress?: string | null;
   goodsName?: string | null;
+  goodsWeight?: number | null;
+  goodsVolume?: number | null;
+  goodsValue?: number | null;
+  freightAmount?: number | null;
+  insuranceAmount?: number | null;
   status?: number | null;
+  courierId?: string | null;
   courierName?: string | null;
   courierPhone?: string | null;
+  signType?: string | null;
+  signPerson?: string | null;
   signTime?: string | null;
+  exceptionType?: string | null;
   exceptionReason?: string | null;
+  estimatedDelivery?: string | null;
+  actualDelivery?: string | null;
   createTime?: string | null;
   updateTime?: string | null;
   remark?: string | null;
@@ -39,6 +53,7 @@ export interface TmsTrackingDTO {
   latitude?: number | null;
   trackStatus?: string | null;
   operator?: string | null;
+  /** Carrier feed or manual entry, e.g. `CARRIER` / `MANUAL`. */
   source?: string | null;
   extraData?: string | null;
   createTime?: string | null;
@@ -71,9 +86,92 @@ export interface TmsCarrierDTO {
   remark?: string | null;
 }
 
+/** `com.cognora.lms.logistics.domain.freight.FreightQuote`. */
+export interface TmsFreightQuoteDTO {
+  actualWeight?: number | null;
+  volumetricWeight?: number | null;
+  chargeableWeight?: number | null;
+  billedWeight?: number | null;
+  firstWeightFee?: number | null;
+  additionalFee?: number | null;
+  regionSurcharge?: number | null;
+  totalAmount?: number | null;
+}
+
+/** `com.cognora.lms.logistics.domain.dto.FreightQuoteRequest`. */
+export interface TmsFreightQuoteRequest {
+  carrierId: string;
+  regionCode?: string;
+  weight: number;
+  volume: number;
+}
+
+/** `com.cognora.lms.logistics.domain.dto.FreightReconcileRequest`. */
+export interface TmsFreightReconcileRequest {
+  waybillId: string;
+  regionCode?: string;
+  billedAmount: number;
+  batchNo?: string;
+  operator?: string;
+}
+
+/** `com.cognora.lms.logistics.domain.entity.TmsFreightTemplate`. */
+export interface TmsFreightTemplateDTO {
+  id: string;
+  templateName?: string | null;
+  carrierId?: string | null;
+  /** Province/region code; `DEFAULT` is the fallback template. */
+  regionCode?: string | null;
+  regionName?: string | null;
+  firstWeightKg?: number | null;
+  firstWeightFee?: number | null;
+  additionalUnitKg?: number | null;
+  additionalUnitFee?: number | null;
+  volumeDivisor?: number | null;
+  regionSurcharge?: number | null;
+  minCharge?: number | null;
+  enabled?: boolean | null;
+  createTime?: string | null;
+  updateTime?: string | null;
+  remark?: string | null;
+}
+
+/** `com.cognora.lms.logistics.domain.entity.TmsFreightReconciliation`. */
+export interface TmsFreightReconciliationDTO {
+  id: string;
+  batchNo?: string | null;
+  waybillId?: string | null;
+  waybillNo?: string | null;
+  carrierId?: string | null;
+  regionCode?: string | null;
+  actualWeight?: number | null;
+  volume?: number | null;
+  chargeableWeight?: number | null;
+  expectedAmount?: number | null;
+  billedAmount?: number | null;
+  /** billed - expected; positive means the carrier overcharged. */
+  diffAmount?: number | null;
+  /** MATCH / OVERCHARGE / UNDERCHARGE. */
+  diffType?: string | null;
+  /** OPEN / CONFIRMED. */
+  status?: string | null;
+  createTime?: string | null;
+  remark?: string | null;
+}
+
 export type TmsWaybillPage = MpPage<TmsWaybillDTO>;
 export type TmsTrackingPage = MpPage<TmsTrackingDTO>;
 export type TmsCarrierPage = MpPage<TmsCarrierDTO>;
+export type TmsFreightReconciliationPage = MpPage<TmsFreightReconciliationDTO>;
+
+export interface TmsWaybillQuery {
+  page: number;
+  size: number;
+  waybillNo?: string;
+  /** Backend `WaybillStatus` code. */
+  status?: number;
+  carrierId?: string;
+}
 
 export interface TmsTrackingQuery {
   page: number;
@@ -88,6 +186,14 @@ export interface TmsCarrierQuery {
   carrierName?: string;
   carrierType?: number;
   enabled?: boolean;
+}
+
+export interface TmsFreightReconciliationQuery {
+  page: number;
+  size: number;
+  batchNo?: string;
+  diffType?: string;
+  status?: string;
 }
 
 export const CARRIER_TYPE: Record<number, string> = {
