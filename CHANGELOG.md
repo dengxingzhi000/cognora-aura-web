@@ -6,6 +6,35 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+Reserved for `0.4.0` — the 11 commits merged after `v0.3.0` (`abbc8b4`). The
+version number is deliberately not bumped yet.
+
+### Added
+
+- Settings self-service is wired to real APIs: typed contracts/services for
+  `GET`/`POST /api/auth/sessions`, `PUT /api/system/users/me` and
+  `GET`/`PUT /api/system/config`. The security, profile and preferences pages
+  fall back to an unavailable state when the backend endpoints are not
+  deployed yet (`#23`).
+- Inventory and logistics action flows: a reservation board (lookup, confirm
+  and release with disabled-reason tooltips), a stock-movement screen and
+  before/after previews on the adjust/transfer forms; a waybill detail screen
+  with guarded status transitions, a tracking timeline, a freight quote
+  breakdown and a reconciliation list. The logistics status enum now matches
+  the backend `WaybillStatus` 0-6 (`#24`).
+- Finance, brand, audit and tenant module pages completed (`#28`).
+
+### Changed
+
+- CodeQL moved from a checked-in workflow to GitHub's default setup; the
+  duplicate `codeql.yml` removed (`9522b48`), and the dev-only minimatch ReDoS
+  risk documented (`7a6a12c`, `0e9a745`).
+
+### Build & CI
+
+- Docker actions pinned to commit SHAs and run on the node24 runtime
+  (`36018d7`, `#29`).
+
 ## [0.3.0] — 2026-11-05
 
 ### Added

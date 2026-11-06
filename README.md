@@ -88,7 +88,8 @@ npm run build
 | `/{locale}/product` · `inventory` · `order` | Core supply-chain screens |
 | `/{locale}/warehouse` · `purchase` · `supplier` | Operations screens |
 | `/{locale}/finance` · `logistics` · `notification` | Finance, carrier and message center |
-| `/{locale}/system` · `tenant` · `approval` · `audit` | Platform administration |
+| `/{locale}/system` · `tenant` · `approval` · `audit` · `document` · `file` | Platform administration |
+| `/{locale}/settings` · `profile` · `preferences` · `notifications` · `security` | Account settings: self-service profile, security, preference and notification screens (the profile screen lives at `/{locale}/settings/profile`) |
 | `/{locale}/ecommerce/*` | Coupons, flash sales, members, payments, refunds, reviews |
 | `/{locale}/shop` | Storefront: catalog, cart, checkout, member orders |
 
@@ -213,6 +214,7 @@ entry point that knows where each service lives.
 | Logistics & supplier | Waybills, tracking, supplier scorecards | `src/features/logistics`, `src/features/supplier` |
 | Platform admin | Users, roles, departments, tenants, approvals, audit, documents | `src/features/system`, `audit`, `document` |
 | E-commerce | Coupons, flash sales, group buys, members, payments, refunds, reviews, sellers | `src/features/ecommerce` |
+| Settings | Self-service profile, account security, notification preferences and platform/tenant preferences | `src/features/settings` |
 | Storefront | Catalog, cart, checkout and member orders | `src/features/shop` |
 | Analytics | E-commerce dashboards over the analytics service | `src/features/analytics` |
 
@@ -291,12 +293,12 @@ or as a directory bundle.
 ### Container image
 
 ```bash
-docker build -t ghcr.io/dengxingzhi000/cognora-aura-web:0.2.0 \
+docker build -t ghcr.io/dengxingzhi000/cognora-aura-web:0.3.0 \
   --build-arg API_AUTH_TARGET=http://<host>:8106 \
   --build-arg API_SYSTEM_TARGET=http://<host>:8081 .
 
 docker run -d --name cognora-aura-web -p 3000:3000 \
-  ghcr.io/dengxingzhi000/cognora-aura-web:0.2.0
+  ghcr.io/dengxingzhi000/cognora-aura-web:0.3.0
 ```
 
 `docker.yml` builds and pushes the same image to GHCR on every push to `main`
@@ -306,8 +308,8 @@ and on `v*` tags.
 
 ```bash
 ./scripts/build-deploy.sh
-# dist/scm-web-deploy/      server.js, .next/ (incl. static), public/, node_modules
-# dist/scm-web-deploy.tar.gz
+# dist/cognora-aura-web/      server.js, .next/ (incl. static), public/, node_modules
+# dist/cognora-aura-web.tar.gz
 ```
 
 ### Rollback
@@ -333,8 +335,10 @@ npm run generate:api    # regenerate clients from openapi/
 ### CI
 
 `ci.yml` runs `npm ci → typecheck → lint → test → build` on every PR and on
-`main`. `codeql.yml` scans JavaScript/TypeScript and Actions weekly (push/PR
-triggers are restored once code scanning is enabled on a public repository).
+`main`. CodeQL runs through GitHub's **default setup**, enabled in the
+repository settings (JavaScript/TypeScript and Actions); there is no checked-in
+`codeql.yml` workflow. `.github/codeql/codeql-config.yml` only keeps the
+generated client out of the scan.
 
 ### Dependency updates
 
@@ -414,7 +418,7 @@ Backend architecture, service ports and database design live in
 ## Related projects
 
 - **[cognora-aura-platform](https://github.com/dengxingzhi000/cognora-aura-platform)** — the 26-service backend this frontend consumes: gateway, auth, system, supply-chain core and the e-commerce layer.
-- **[enterprise-agent](https://github.com/dengxingzhi000/enterprise-agent)** — Python AI operations agent built on the same platform.
+- **[cognora-enterprise-agent](https://github.com/dengxingzhi000/cognora-enterprise-agent)** — Python AI operations agent built on the same platform.
 
 ## Contributing
 
