@@ -5,6 +5,7 @@ import type {
   ReconciliationQuery,
   ReconciliationRecordDTO,
   ReconciliationRecordPage,
+  SettlementOrderDTO,
   SettlementOrderPage,
 } from "../contracts/finance";
 
@@ -22,11 +23,14 @@ const put = <T>(url: string, body?: unknown) =>
 const del = <T>(url: string) => unwrap<T>(apiClient.delete(url));
 
 export const financeApiService = {
-  listSettlements: (page: number, size: number) =>
+  listSettlements: (page: number, size: number, status?: number) =>
     get<SettlementOrderPage>(`${FINANCE_BASE}/settlement-order/list`, {
       page,
       size,
+      status,
     }),
+  getSettlement: (id: string) =>
+    get<SettlementOrderDTO>(`${FINANCE_BASE}/settlement-order/${id}`),
   pageInvoices: (pageNum: number, pageSize: number) =>
     get<InvoicePage>(`${FINANCE_BASE}/invoice/page`, { pageNum, pageSize }),
 

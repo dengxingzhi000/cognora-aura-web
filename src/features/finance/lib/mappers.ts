@@ -11,6 +11,17 @@ import type { Invoice, Settlement } from "../types";
 export const formatDate = (value?: string | null): string =>
   value ? dayjs(value).format("YYYY-MM-DD") : "-";
 
+export const formatDateTime = (value?: string | null): string =>
+  value ? dayjs(value).format("YYYY-MM-DD HH:mm:ss") : "-";
+
+export const SETTLEMENT_STATUS_LABELS: Record<number, string> = {
+  0: "待确认",
+  1: "已确认",
+  2: "待付款",
+  3: "部分付款",
+  4: "已付款",
+};
+
 const SETTLEMENT_STATUS: Record<
   number,
   { status: Settlement["status"]; label: string }
@@ -44,6 +55,17 @@ export const toSettlement = (dto: SettlementOrderDTO): Settlement => {
     statusLabel: mapped.label,
     period: dto.settlementPeriod ?? "-",
     createdAt: formatDate(dto.createTime),
+    partnerType: dto.partnerType ?? "-",
+    startDate: formatDate(dto.startDate),
+    endDate: formatDate(dto.endDate),
+    totalAmount: dto.totalAmount ?? 0,
+    discountAmount: dto.discountAmount ?? 0,
+    adjustmentAmount: dto.adjustmentAmount ?? 0,
+    paidAmount: dto.paidAmount ?? 0,
+    unpaidAmount: dto.unpaidAmount ?? 0,
+    approverName: dto.approverName ?? "-",
+    approvedAt: formatDateTime(dto.approvedAt),
+    remark: dto.remark ?? "-",
   };
 };
 
@@ -60,6 +82,7 @@ export const toInvoice = (
     id: dto.id,
     invoiceNo: dto.invoiceNo ?? "-",
     settlementNo,
+    partyName: dto.partyName ?? "-",
     amount: dto.amount ?? 0,
     taxAmount: dto.taxAmount ?? 0,
     status: mapped.status,

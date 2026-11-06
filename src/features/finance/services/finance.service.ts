@@ -2,20 +2,50 @@ import { financeApiService } from "@/lib/api/services/finance";
 
 import {
   toInvoicePage,
+  toSettlement,
   toSettlementPage,
 } from "../lib/mappers";
 import type { Invoice, Settlement } from "../types";
 
-const LIST_SIZE = 100;
+export interface SettlementPageModel {
+  rows: Settlement[];
+  total: number;
+  page: number;
+  size: number;
+}
+
+export interface InvoicePageModel {
+  rows: Invoice[];
+  total: number;
+  page: number;
+  size: number;
+}
 
 export const financeService = {
-  listSettlements: async (): Promise<Settlement[]> =>
-    toSettlementPage(await financeApiService.listSettlements(1, LIST_SIZE)),
+  listSettlements: async (
+    page: number,
+    size: number,
+    status?: number,
+  ): Promise<SettlementPageModel> => {
+    const response = await financeApiService.listSettlements(page, size, status);
+    return {
+      rows: toSettlementPage(response),
+      total: response?.total ?? 0,
+      page,
+      size,
+    };
+  },
 
-  listInvoices: async (): Promise<Invoice[]> => {
+  getSettlement: async (id: string): Promise<Settlement> =>
+    toSettlement(await financeApiService.getSettlement(id)),
+
+  listInvoices: async (
+    page: number,
+    size: number,
+  ): Promise<InvoicePageModel> => {
     const [invoices, settlements] = await Promise.all([
-      financeApiService.pageInvoices(1, LIST_SIZE),
-      financeApiService.listSettlements(1, LIST_SIZE).catch(() => null),
+      financeApiService.pageInvoices(page, size),
+      financeApiService.listSettlements(1, 100).catch(() => null),
     ]);
 
     const settlementNoById = Object.fromEntries(
@@ -25,6 +55,11 @@ export const financeService = {
       ])
     );
 
-    return toInvoicePage(invoices, settlementNoById);
+    return {
+      rows: toInvoicePage(invoices, settlementNoById),
+      total: invoices?.total ?? 0,
+      page,
+      size,
+    };
   },
 };

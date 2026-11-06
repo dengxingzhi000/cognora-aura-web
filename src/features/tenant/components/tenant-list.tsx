@@ -30,7 +30,9 @@ import {
   TableToolbar,
   TableToolbarEnd,
 } from "@/components/ui/table-shell";
+import { PermissionGate } from "@/components/ui/permission-gate";
 import type { TenantDTO } from "@/lib/api/contracts/tenant";
+import { usePermission } from "@/hooks/use-permission";
 
 import {
   useDeleteTenant,
@@ -60,6 +62,10 @@ export function TenantList() {
   });
   const toggle = useToggleTenant();
   const remove = useDeleteTenant();
+  const { hasPermission } = usePermission();
+  const canCreate = hasPermission("tenant:tenant:create");
+  const canEdit = hasPermission("tenant:tenant:update");
+  const canDelete = hasPermission("tenant:tenant:delete");
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<TenantDTO | null>(null);
@@ -87,7 +93,14 @@ export function TenantList() {
         title="租户列表"
         description="管理平台租户档案、订阅与资源配额"
         actions={
-          <Button onClick={openCreate}>开通租户</Button>
+          <PermissionGate
+            allowed={canCreate}
+            reason="无权限：需要 tenant:tenant:create"
+          >
+            <Button onClick={openCreate} disabled={!canCreate}>
+              开通租户
+            </Button>
+          </PermissionGate>
         }
       />
 
@@ -231,31 +244,58 @@ export function TenantList() {
                       >
                         详情
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openEdit(tenant)}
+                      <PermissionGate
+                        allowed={canEdit}
+                        reason="无权限：需要 tenant:tenant:update"
                       >
-                        编辑
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        disabled={toggle.isPending}
-                        onClick={() =>
-                          toggle.mutate({ id: tenant.id, enable: !active })
-                        }
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={!canEdit}
+                          onClick={() => openEdit(tenant)}
+                        >
+                          编辑
+                        </Button>
+                      </PermissionGate>
+                      <PermissionGate
+                        allowed={hasPermission(
+                          active ? "tenant:tenant:disable" : "tenant:tenant:enable",
+                        )}
+                        reason={`无权限：需要 ${
+                          active ? "tenant:tenant:disable" : "tenant:tenant:enable"
+                        }`}
                       >
-                        {active ? "停用" : "启用"}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive"
-                        onClick={() => setDeleting(tenant)}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={
+                            !hasPermission(
+                              active
+                                ? "tenant:tenant:disable"
+                                : "tenant:tenant:enable",
+                            ) || toggle.isPending
+                          }
+                          onClick={() =>
+                            toggle.mutate({ id: tenant.id, enable: !active })
+                          }
+                        >
+                          {active ? "停用" : "启用"}
+                        </Button>
+                      </PermissionGate>
+                      <PermissionGate
+                        allowed={canDelete}
+                        reason="无权限：需要 tenant:tenant:delete"
                       >
-                        删除
-                      </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive"
+                          disabled={!canDelete}
+                          onClick={() => setDeleting(tenant)}
+                        >
+                          删除
+                        </Button>
+                      </PermissionGate>
                     </TableCell>
                   </TableRow>
                 );
