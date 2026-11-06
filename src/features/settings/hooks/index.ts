@@ -3,4 +3,6 @@ export {
   useUpdateCurrentTenant,
   useTenantConfigs,
   useSaveTenantConfig,
+  useSystemConfigs,
+  useSaveSystemConfig,
 } from "./use-system-settings";

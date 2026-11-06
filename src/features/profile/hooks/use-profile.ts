@@ -8,16 +8,11 @@ import { toApiError } from "@/lib/api/envelope";
 import { authService } from "@/lib/api/services/auth";
 import { systemService } from "@/lib/api/services/system";
 import { useAuthStore } from "@/stores/useAuthStore";
-import type { UserDTO } from "@/lib/api/contracts/system";
+import type { SelfProfileUpdateRequest } from "@/lib/api/contracts/system";
 
 export interface ChangePasswordInput {
   oldPassword: string;
   newPassword: string;
-}
-
-export interface UpdateProfileInput {
-  userId: string;
-  values: Partial<UserDTO>;
 }
 
 /** Profile fields come from `GET /auth/api/auth/userinfo` — the only self-service read endpoint. */
@@ -29,13 +24,18 @@ export function useProfile() {
   });
 }
 
+/**
+ * Self-service profile update. The whitelisted fields go to
+ * `PUT /api/system/users/me`, which every signed-in user may call — no
+ * `system:user:edit` required.
+ */
 export function useUpdateProfile() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ userId, values }: UpdateProfileInput) =>
-      systemService.users.update(userId, values),
-    onSuccess: (_, variables) => {
+    mutationFn: (values: SelfProfileUpdateRequest) =>
+      systemService.users.updateMe(values),
+    onSuccess: (_, values) => {
       message.success("资料已更新");
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PROFILE.INFO });
 
@@ -43,12 +43,41 @@ export function useUpdateProfile() {
       if (user) {
         setUser({
           ...user,
-          displayName:
-            (variables.values.realName as string | undefined) ?? user.displayName,
-          email: (variables.values.email as string | undefined) ?? user.email,
-          avatar: (variables.values.avatar as string | undefined) ?? user.avatar,
+          displayName: values.realName ?? user.displayName,
+          email: values.email ?? user.email,
+          avatar: values.avatar ?? user.avatar,
         });
       }
+    },
+    onError: (error) => message.error(toApiError(error).message),
+  });
+}
+
+/** Active login sessions. Not deployed yet — 404 degrades to「暂不可用」. */
+export function useLoginSessions(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: QUERY_KEYS.PROFILE.SESSIONS,
+    queryFn: () => authService.sessions.list(),
+    retry: false,
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useLogoutOtherSessions() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => authService.sessions.logoutOthers(),
+    onSuccess: (result) => {
+      const count = result?.revokedCount;
+      message.success(
+        count
+          ? `已退出 ${count} 个其他设备，当前设备的登录已保留`
+          : "已退出其他设备，当前设备的登录已保留"
+      );
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.PROFILE.SESSIONS,
+      });
     },
     onError: (error) => message.error(toApiError(error).message),
   });

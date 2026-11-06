@@ -1,6 +1,8 @@
 export {
   useProfile,
   useUpdateProfile,
+  useLoginSessions,
+  useLogoutOtherSessions,
   useChangePassword,
   usePasskeys,
   useRenamePasskey,

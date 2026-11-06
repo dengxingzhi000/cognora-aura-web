@@ -6,6 +6,7 @@ import { Layers, Settings2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePermission } from "@/hooks/use-permission";
 import DictionarySummary from "./dictionary-summary";
+import SystemConfigCard from "./system-config-card";
 import TenantSettings from "./tenant-settings";
 import { UnavailableCard } from "./unavailable-card";
 
@@ -33,11 +34,7 @@ export default function SystemSettings() {
           </p>
         </div>
 
-        <UnavailableCard
-          title="系统参数"
-          reason="后端没有 sys-config 类端点，无法读取或维护全局参数。"
-          needed="GET /api/system/config、PUT /api/system/config"
-        />
+        <SystemConfigCard />
 
         {canDict ? (
           <DictionarySummary href={`/${locale}/system/dictionary`} />
@@ -77,6 +74,8 @@ export default function SystemSettings() {
           </CardDescription>
         </CardHeader>
         <CardContent className="text-muted-foreground grid gap-1 text-xs sm:grid-cols-2">
+          <p>系统参数查看：system:config:view</p>
+          <p>系统参数编辑：system:config:edit</p>
           <p>字典：system:dict:list</p>
           <p>租户查看：tenant:tenant:view</p>
           <p>租户更新：tenant:tenant:update</p>

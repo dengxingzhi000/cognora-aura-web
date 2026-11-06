@@ -33,6 +33,8 @@ export interface UserInfo {
   avatar?: string;
   email?: string;
   phone?: string;
+  /** Only present once the backend exposes it; the profile form hides the field otherwise. */
+  timezone?: string;
   deptId?: string;
   deptName?: string;
   userLevel?: number;
@@ -105,4 +107,23 @@ export interface TokenUpgradeResponse {
   accessToken: string;
   tokenType?: string;
   expiresIn?: number;
+}
+
+/** `GET /api/auth/sessions` — one row per active login session. */
+export interface AuthSessionDTO {
+  sessionId: string;
+  deviceName?: string;
+  deviceType?: "web" | "mobile" | "desktop";
+  ip?: string;
+  location?: string;
+  userAgent?: string;
+  createdAt?: string;
+  lastActiveAt?: string;
+  /** True for the session that issued the current access token. */
+  current?: boolean;
+}
+
+/** `POST /api/auth/sessions/logout-others` — the current session is always kept. */
+export interface LogoutOthersResponse {
+  revokedCount: number;
 }

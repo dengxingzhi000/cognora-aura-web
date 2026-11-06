@@ -1,8 +1,10 @@
 import apiClient from "../client";
 import { unwrap } from "../envelope";
 import type {
+  AuthSessionDTO,
   LoginRequest,
   LoginResponse,
+  LogoutOthersResponse,
   RefreshTokenRequest,
   TokenUpgradeResponse,
   UserInfo,
@@ -20,6 +22,17 @@ export const authService = {
     unwrap<LoginResponse>(apiClient.post(`${AUTH_BASE}/login`, data)),
 
   logout: () => unwrap<void>(apiClient.post(`${AUTH_BASE}/logout`)),
+
+  /** Self-service login sessions. Not deployed yet — see docs/BACKEND_GAPS.md. */
+  sessions: {
+    list: () => unwrap<AuthSessionDTO[]>(apiClient.get(`${AUTH_BASE}/sessions`)),
+
+    /** Revokes every session except the one issuing the access token. */
+    logoutOthers: () =>
+      unwrap<LogoutOthersResponse>(
+        apiClient.post(`${AUTH_BASE}/sessions/logout-others`)
+      ),
+  },
 
   refresh: (data: RefreshTokenRequest) =>
     unwrap<LoginResponse>(apiClient.post(`${AUTH_BASE}/refresh`, data)),
