@@ -1,10 +1,13 @@
 'use client'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { message } from 'antd'
+import { toApiError } from '@/lib/api/envelope'
 import { productApiService } from '@/lib/api/services/product'
 import type { ProdBrandPayload, ProdBrandQuery } from '@/lib/api/contracts/product'
 
 const BRAND_KEY = ['product', 'brand'] as const
+
+const fail = (error: unknown) => message.error(toApiError(error).message)
 
 export function useBrandList(query: ProdBrandQuery) {
   return useQuery({
@@ -44,6 +47,7 @@ export function useCreateBrand() {
       qc.invalidateQueries({ queryKey: BRAND_KEY })
       message.success('创建成功')
     },
+    onError: fail,
   })
 }
 
@@ -56,6 +60,7 @@ export function useUpdateBrand() {
       qc.invalidateQueries({ queryKey: BRAND_KEY })
       message.success('更新成功')
     },
+    onError: fail,
   })
 }
 
@@ -67,5 +72,6 @@ export function useDeleteBrand() {
       qc.invalidateQueries({ queryKey: BRAND_KEY })
       message.success('删除成功')
     },
+    onError: fail,
   })
 }

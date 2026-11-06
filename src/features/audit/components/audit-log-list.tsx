@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import dayjs from "dayjs";
 
+import { BackendPendingNote } from "@/components/ui/backend-pending-note";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,12 +46,33 @@ import {
 } from "@/lib/api/contracts/audit";
 
 import { useAuditLogPage, useSensitiveLogPage } from "../hooks";
+import { mapAuditText } from "../lib/mojibake-map";
 
 const PAGE_SIZE = 20;
 const ALL = "__all__";
 
 const formatDateTime = (value?: string | null) =>
   value ? value.replace("T", " ").slice(0, 19) : "-";
+
+/**
+ * 后端 `/sys-audit-log/page` 与 `/sys-sensitive-operation-log/page`
+ * 都没有 startTime/endTime 参数，时间范围只能对「已加载的当前页」做降级过滤。
+ */
+const filterByTimeRange = <T extends { createTime?: string | null }>(
+  rows: T[],
+  range: { startTime: string; endTime: string },
+): T[] => {
+  if (!range.startTime && !range.endTime) return rows;
+  const start = range.startTime ? dayjs(range.startTime).valueOf() : null;
+  const end = range.endTime ? dayjs(range.endTime).valueOf() : null;
+  return rows.filter((row) => {
+    if (!row.createTime) return false;
+    const time = dayjs(row.createTime).valueOf();
+    if (start !== null && time < start) return false;
+    if (end !== null && time > end) return false;
+    return true;
+  });
+};
 
 function DetailDialog({
   open,
@@ -67,13 +90,17 @@ function DetailDialog({
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>原始审计字段，保留提交时的完整上下文。</DialogDescription>
+          <DialogDescription>
+            历史乱码字段已在前端按映射表展示，数据库原值未修改；未命中映射的内容原样展示。
+          </DialogDescription>
         </DialogHeader>
         <div className="max-h-[60vh] space-y-2 overflow-y-auto pr-1">
           {entries.map(([label, value]) => {
             if (value === null || value === undefined || value === "") return null;
             const text =
-              typeof value === "string" ? value : JSON.stringify(value, null, 2);
+              typeof value === "string"
+                ? mapAuditText(value)
+                : mapAuditText(JSON.stringify(value, null, 2));
             return (
               <div key={label}>
                 <div className="text-muted-foreground text-[10px] uppercase tracking-wide">
@@ -102,6 +129,8 @@ export function AuditLogList() {
     businessType: "",
     riskLevel: ALL,
     riskScore: "",
+    startTime: "",
+    endTime: "",
   });
   const [applied, setApplied] = useState(draft);
 
@@ -130,8 +159,15 @@ export function AuditLogList() {
 
   const isLoading =
     tab === "audit" ? auditQuery.isLoading : sensitiveQuery.isLoading;
-  const auditRows = auditQuery.data?.records ?? [];
-  const sensitiveRows = sensitiveQuery.data?.records ?? [];
+  const auditRows = useMemo(
+    () => filterByTimeRange(auditQuery.data?.records ?? [], applied),
+    [auditQuery.data?.records, applied],
+  );
+  const sensitiveRows = useMemo(
+    () => filterByTimeRange(sensitiveQuery.data?.records ?? [], applied),
+    [sensitiveQuery.data?.records, applied],
+  );
+  const timeFilterActive = !!(applied.startTime || applied.endTime);
   const total =
     tab === "audit"
       ? (auditQuery.data?.total ?? 0)
@@ -154,6 +190,8 @@ export function AuditLogList() {
       businessType: "",
       riskLevel: ALL,
       riskScore: "",
+      startTime: "",
+      endTime: "",
     };
     setDraft(empty);
     setApplied(empty);
@@ -168,8 +206,13 @@ export function AuditLogList() {
       <PageHeader
         eyebrow="安全审计"
         title="审计日志"
-        description="追溯业务操作与敏感数据访问，支持按用户、模块与风险等级筛选"
+        description="追溯业务操作与敏感数据访问，支持按用户、模块、风险等级与时间范围筛选"
       />
+
+      <BackendPendingNote>
+        审计分页接口没有 startTime/endTime 参数，时间范围筛选仅对当前页已加载数据
+        生效（后端时间范围过滤待上线）；历史乱码字段仅在前端按映射表展示，不改库。
+      </BackendPendingNote>
 
       <TablePanel>
         <TableToolbar>
@@ -197,7 +240,11 @@ export function AuditLogList() {
             ))}
           </div>
           <TableToolbarEnd>
-            <span className="text-muted-foreground text-[11px]">共 {total} 条</span>
+            <span className="text-muted-foreground text-[11px]">
+              {timeFilterActive
+                ? `当前页时间筛选后 ${tab === "audit" ? auditRows.length : sensitiveRows.length} 条 / 后端共 ${total} 条`
+                : `共 ${total} 条`}
+            </span>
           </TableToolbarEnd>
         </TableToolbar>
 
@@ -256,6 +303,20 @@ export function AuditLogList() {
               onChange={(event) => set("riskScore", event.target.value)}
             />
           )}
+          <Input
+            className="h-7 w-44 text-xs"
+            type="datetime-local"
+            aria-label="开始时间"
+            value={draft.startTime}
+            onChange={(event) => set("startTime", event.target.value)}
+          />
+          <Input
+            className="h-7 w-44 text-xs"
+            type="datetime-local"
+            aria-label="结束时间"
+            value={draft.endTime}
+            onChange={(event) => set("endTime", event.target.value)}
+          />
           <Button size="sm" variant="outline" onClick={apply}>
             查询
           </Button>
@@ -294,12 +355,12 @@ export function AuditLogList() {
                         {row.realName ?? row.username ?? row.userId ?? "-"}
                       </TableCell>
                       <TableCell>
-                        <div>{row.operationType ?? "-"}</div>
+                        <div>{mapAuditText(row.operationType)}</div>
                         <div className="text-muted-foreground max-w-[180px] truncate text-[10px]">
-                          {row.operationDesc ?? ""}
+                          {row.operationDesc ? mapAuditText(row.operationDesc) : ""}
                         </div>
                       </TableCell>
-                      <TableCell>{row.operationModule ?? "-"}</TableCell>
+                      <TableCell>{mapAuditText(row.operationModule)}</TableCell>
                       <TableCell className="font-mono text-[10px]">
                         {row.requestMethod ?? "-"}{" "}
                         <span className="text-muted-foreground">
@@ -372,15 +433,15 @@ export function AuditLogList() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div>{row.operationType ?? "-"}</div>
+                    <div>{mapAuditText(row.operationType)}</div>
                     <div className="text-muted-foreground text-[10px]">
-                      {row.operationModule ?? ""}
+                      {row.operationModule ? mapAuditText(row.operationModule) : ""}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div>{row.sensitiveDataType ?? "-"}</div>
+                    <div>{mapAuditText(row.sensitiveDataType)}</div>
                     <div className="text-muted-foreground text-[10px]">
-                      {row.targetTable ?? ""}
+                      {row.targetTable ? mapAuditText(row.targetTable) : ""}
                     </div>
                   </TableCell>
                   <TableCell numeric>{row.affectedCount ?? "-"}</TableCell>

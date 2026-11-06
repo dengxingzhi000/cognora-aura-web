@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
+import { PermissionGate } from "@/components/ui/permission-gate";
 import {
   TableEmpty,
   TableLoading,
@@ -48,13 +49,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { ProdBrandDTO, ProdBrandPayload } from "@/lib/api/contracts/product";
+import { usePermission } from "@/hooks/use-permission";
+import { useTenantStore } from "@/stores/tenant-store";
 import {
   useBrandList,
   useCreateBrand,
@@ -150,6 +148,11 @@ export default function BrandManage() {
   const createBrand = useCreateBrand();
   const updateBrand = useUpdateBrand();
   const deleteBrand = useDeleteBrand();
+  const { hasPermission } = usePermission();
+  const { currentTenant } = useTenantStore();
+  const canCreate = hasPermission("product:brand:create");
+  const canUpdate = hasPermission("product:brand:update");
+  const canDelete = hasPermission("product:brand:delete");
 
   const form = useForm<BrandFormValues>({
     resolver: zodResolver(brandFormSchema),
@@ -232,38 +235,40 @@ export default function BrandManage() {
           header: "操作",
           cell: ({ row }) => (
             <div className="flex items-center justify-end gap-1">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label="编辑"
-                    onClick={() => openDialog(row.original)}
-                  >
-                    <Pencil />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>编辑</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label="删除"
-                    className="text-destructive hover:text-destructive"
-                    onClick={() => setDeleteTarget(row.original)}
-                  >
-                    <Trash2 />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>删除</TooltipContent>
-              </Tooltip>
+              <PermissionGate
+                allowed={canUpdate}
+                reason="无权限：需要 product:brand:update"
+              >
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="编辑"
+                  disabled={!canUpdate}
+                  onClick={() => openDialog(row.original)}
+                >
+                  <Pencil />
+                </Button>
+              </PermissionGate>
+              <PermissionGate
+                allowed={canDelete}
+                reason="无权限：需要 product:brand:delete"
+              >
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="删除"
+                  className="text-destructive hover:text-destructive"
+                  disabled={!canDelete}
+                  onClick={() => setDeleteTarget(row.original)}
+                >
+                  <Trash2 />
+                </Button>
+              </PermissionGate>
             </div>
           ),
         }),
       ]),
-    [openDialog],
+    [openDialog, canUpdate, canDelete],
   );
 
   const brandTable = useTable({
@@ -299,10 +304,15 @@ export default function BrandManage() {
         title="品牌管理"
         description="维护品牌档案、标识与启用状态"
         actions={
-          <Button onClick={() => openDialog()}>
-            <Plus />
-            新建品牌
-          </Button>
+          <PermissionGate
+            allowed={canCreate}
+            reason="无权限：需要 product:brand:create"
+          >
+            <Button disabled={!canCreate} onClick={() => openDialog()}>
+              <Plus />
+              新建品牌
+            </Button>
+          </PermissionGate>
         }
       />
 
@@ -333,7 +343,8 @@ export default function BrandManage() {
           </form>
           <TableToolbarEnd>
             <span className="text-muted-foreground text-[11px]">
-              共 {total} 个品牌
+              当前租户：{currentTenant?.name ?? "未选择租户"}（
+              {currentTenant?.id ?? "-"}）· 共 {total} 个品牌
             </span>
           </TableToolbarEnd>
         </TableToolbar>
@@ -401,13 +412,26 @@ export default function BrandManage() {
           <DialogHeader>
             <DialogTitle>{editing ? "编辑品牌" : "新建品牌"}</DialogTitle>
             <DialogDescription>
-              填写品牌信息，带 * 的为必填项。
+              填写品牌信息，带 * 的为必填项。品牌归属由当前租户上下文决定，
+              编辑时不可修改；品牌编码创建后不可修改。
             </DialogDescription>
           </DialogHeader>
 
           <Form {...form}>
             <form onSubmit={onSubmit} className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <FormLabel className="mb-1.5 block">归属租户（不可修改）</FormLabel>
+                  <Input
+                    value={
+                      currentTenant
+                        ? `${currentTenant.name} / ${currentTenant.id}`
+                        : "未选择租户"
+                    }
+                    disabled
+                    readOnly
+                  />
+                </div>
                 <FormField
                   control={form.control}
                   name="brandCode"
@@ -580,9 +604,21 @@ export default function BrandManage() {
                 >
                   取消
                 </Button>
-                <Button type="submit" disabled={isPending}>
-                  保存
-                </Button>
+                <PermissionGate
+                  allowed={editing ? canUpdate : canCreate}
+                  reason={`无权限：需要 ${
+                    editing ? "product:brand:update" : "product:brand:create"
+                  }`}
+                >
+                  <Button
+                    type="submit"
+                    disabled={
+                      isPending || !(editing ? canUpdate : canCreate)
+                    }
+                  >
+                    保存
+                  </Button>
+                </PermissionGate>
               </DialogFooter>
             </form>
           </Form>
@@ -606,7 +642,7 @@ export default function BrandManage() {
             </Button>
             <Button
               variant="destructive"
-              disabled={deleteBrand.isPending}
+              disabled={deleteBrand.isPending || !canDelete}
               onClick={() => {
                 if (!deleteTarget) return;
                 deleteBrand.mutate(deleteTarget.id, {

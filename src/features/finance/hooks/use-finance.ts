@@ -11,11 +11,32 @@ import type {
 
 import { financeService } from '../services/finance.service'
 
-export function useSettlementList() {
-  return useQuery({ queryKey: ['finance', 'settlements'], queryFn: () => financeService.listSettlements() })
+export interface SettlementListQuery {
+  page: number
+  size: number
+  status?: number
 }
-export function useInvoiceList() {
-  return useQuery({ queryKey: ['finance', 'invoices'], queryFn: () => financeService.listInvoices() })
+
+export function useSettlementList(query: SettlementListQuery) {
+  return useQuery({
+    queryKey: ['finance', 'settlements', query],
+    queryFn: () => financeService.listSettlements(query.page, query.size, query.status),
+  })
+}
+
+export function useSettlementDetail(id: string) {
+  return useQuery({
+    queryKey: ['finance', 'settlement', id],
+    queryFn: () => financeService.getSettlement(id),
+    enabled: !!id,
+  })
+}
+
+export function useInvoiceList(query: { page: number; size: number }) {
+  return useQuery({
+    queryKey: ['finance', 'invoices', query],
+    queryFn: () => financeService.listInvoices(query.page, query.size),
+  })
 }
 
 const fail = (error: unknown) => message.error(toApiError(error).message)
