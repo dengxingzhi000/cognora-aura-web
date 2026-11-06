@@ -4,10 +4,10 @@ All notable changes to this project are documented in this file. The format foll
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project versions
 follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.4.0] - 2026-11-06
 
-Reserved for `0.4.0` — the 11 commits merged after `v0.3.0` (`abbc8b4`). The
-version number is deliberately not bumped yet.
+Covers the 11 commits merged after `v0.3.0` (`abbc8b4`). The `v0.4.0` tag is not
+created yet — tagging is the release step and is done separately.
 
 ### Added
 
