@@ -6,8 +6,9 @@ follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [0.4.0] - 2026-11-06
 
-Covers the 11 commits merged after `v0.3.0` (`abbc8b4`). The `v0.4.0` tag is not
-created yet — tagging is the release step and is done separately.
+Covers everything merged after `v0.3.0` (`33b9f80`) — 10 non-merge commits. The
+`v0.4.0` tag is not created yet — tagging is the release step and is done
+separately.
 
 ### Added
 
@@ -29,6 +30,13 @@ created yet — tagging is the release step and is done separately.
 - CodeQL moved from a checked-in workflow to GitHub's default setup; the
   duplicate `codeql.yml` removed (`9522b48`), and the dev-only minimatch ReDoS
   risk documented (`7a6a12c`, `0e9a745`).
+- The READMEs and changelog were aligned with the 0.3.0 state, including the
+  `/settings` and `/profile` routes and the settings feature (`#31`).
+
+### Fixed
+
+- Half-mapped audit verbs (`修改` and the remaining Chinese labels) now map to
+  their English equivalents instead of falling through (`edbe755`, `#32`).
 
 ### Build & CI
 
