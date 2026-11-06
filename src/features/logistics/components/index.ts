@@ -1,4 +1,6 @@
 export { default as WaybillList } from './waybill-list'
+export { default as WaybillDetail } from './waybill-detail'
+export { default as ReconciliationList } from './reconciliation-list'
 export { default as TrackingTimeline } from './tracking-timeline'
 export { TrackingList } from './tracking-list'
 export { CarrierList } from './carrier-list'

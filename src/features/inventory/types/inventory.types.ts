@@ -61,3 +61,52 @@ export interface PageResult<T> {
   current: number
   pageSize: number
 }
+
+/** `ReservationStatus` in the inventory batch 1 state machine (DB only, no REST list yet). */
+export type ReservationStatusValue =
+  | 'RESERVED'
+  | 'CONFIRMED'
+  | 'RELEASED'
+  | 'EXPIRED'
+
+export interface ReservationRecord {
+  businessKey: string
+  skuId?: string
+  warehouseId?: string
+  quantity: number
+  status: ReservationStatusValue
+  reservedAt?: string
+  /** Demo rows cannot be operated; real rows come from a business-key lookup. */
+  demo?: boolean
+}
+
+export interface ReservationLookupResult {
+  businessKey: string
+  /** `check` answers true only while the reservation is RESERVED. */
+  exists: boolean
+  /** `quantity` answers null once the reservation left RESERVED. */
+  quantity: number | null
+}
+
+export type StockMovementType =
+  | 'INBOUND'
+  | 'OUTBOUND'
+  | 'ADJUST'
+  | 'TRANSFER_OUT'
+  | 'TRANSFER_IN'
+  | 'RESERVE'
+  | 'RELEASE'
+
+export interface StockMovement {
+  id: string
+  skuId: string
+  warehouseId: string
+  type: StockMovementType
+  quantity: number
+  availableBefore: number
+  availableAfter: number
+  referenceNo?: string
+  operator?: string
+  occurredAt: string
+}
+

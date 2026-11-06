@@ -11,6 +11,7 @@ import type {
   InventoryItem,
   InventorySearchParams,
   PageResult,
+  ReservationLookupResult,
   StockAdjustment,
   StockAlert,
 } from '../types'
@@ -72,6 +73,32 @@ export const inventoryService = {
 
   initStock: (skuId: string, warehouseId: string, initialStock: number) =>
     inventoryApiService.initStock(skuId, warehouseId, initialStock),
+
+  /**
+   * 后端提供 `check` 与 `quantity` 两个真实接口，但没有预占列表/状态查询接口。
+   * `check` 仅在 RESERVED 状态返回 true，`quantity` 在确认/释放/过期后返回 null，
+   * 因此这里只能区分“仍预占”和“不在 RESERVED”，无法区分终态是哪一种。
+   * 列表接口待后端上线（不得伪造路径）。
+   */
+  lookupReservation: async (businessKey: string): Promise<ReservationLookupResult> => {
+    const [exists, quantity] = await Promise.all([
+      inventoryApiService.reservationExists(businessKey),
+      inventoryApiService.reservationQuantity(businessKey).catch(() => null),
+    ]);
+    return {
+      businessKey,
+      exists: Boolean(exists),
+      quantity: typeof quantity === 'number' ? quantity : null,
+    };
+  },
+
+  confirmReservation: (businessKey: string) =>
+    inventoryApiService.confirmReservation(businessKey),
+
+  releaseReservation: (businessKey: string) =>
+    inventoryApiService.releaseReservation(businessKey),
+
+  releaseExpiredReservations: () => inventoryApiService.releaseExpired(),
 
   stats: () => inventoryApiService.stats(),
 };
