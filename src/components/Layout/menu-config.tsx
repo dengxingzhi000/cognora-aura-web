@@ -57,6 +57,7 @@ export const appMenuItems: MenuItem[] = [
     getItem('预占管理', '/inventory/reservations'),
     getItem('库存流水', '/inventory/movements'),
     getItem('库存预警', '/inventory/alerts'),
+    getItem('智能补货', '/inventory/replenishment'),
   ]),
   getItem('仓库管理', 'group-warehouse', <ApartmentOutlined />, [
     getItem('仓库列表', '/warehouse'),
