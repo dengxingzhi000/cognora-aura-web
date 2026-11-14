@@ -24,11 +24,10 @@ import {
 import { PermissionGate } from '@/components/ui/permission-gate'
 import { PERMISSIONS } from '@/constants/permissions'
 import { usePermission } from '@/hooks/use-permission'
+import ReplenishmentDetailDialog from './replenishment-detail-dialog'
 import {
-  useAdoptReplenishment,
   useConvertReplenishment,
   useGenerateReplenishment,
-  useRejectReplenishment,
   useReplenishmentSuggestions,
 } from '../hooks'
 import type { ReplenishmentStatus, ReplenishmentSuggestionRow } from '../types'
@@ -58,17 +57,14 @@ const statusConfig: Record<
 export default function ReplenishmentBoard() {
   const { hasPermission } = usePermission()
   const [dryRun] = useState(false)
+  const [detailId, setDetailId] = useState<string | null>(null)
   const { data, isLoading, refetch } = useReplenishmentSuggestions()
   const generate = useGenerateReplenishment()
-  const adopt = useAdoptReplenishment()
-  const reject = useRejectReplenishment()
   const convert = useConvertReplenishment()
 
   const rows: ReplenishmentSuggestionRow[] = data?.records ?? []
 
   const canGenerate = hasPermission(PERMISSIONS.REPLENISHMENT.GENERATE)
-  const canAdopt = hasPermission(PERMISSIONS.REPLENISHMENT.ADOPT)
-  const canReject = hasPermission(PERMISSIONS.REPLENISHMENT.REJECT)
   const canConvert = hasPermission(PERMISSIONS.REPLENISHMENT.CONVERT)
 
   return (
@@ -157,39 +153,13 @@ export default function ReplenishmentBoard() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <PermissionGate
-                          allowed={canAdopt}
-                          reason={`缺少权限 ${PERMISSIONS.REPLENISHMENT.ADOPT}`}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setDetailId(row.id)}
                         >
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={!row.decidable || adopt.isPending}
-                            onClick={() => adopt.mutate(row.id)}
-                          >
-                            采纳
-                          </Button>
-                        </PermissionGate>
-                        <PermissionGate
-                          allowed={canReject}
-                          reason={`缺少权限 ${PERMISSIONS.REPLENISHMENT.REJECT}`}
-                        >
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={!row.decidable || reject.isPending}
-                            onClick={() => {
-                              // 驳回必须带原因（后端校验非空），用 prompt 保持依赖最小；
-                              // 需要更强校验时换成受控 Dialog。
-                              const reason = window.prompt('请填写驳回原因')
-                              if (reason && reason.trim()) {
-                                reject.mutate({ id: row.id, reason: reason.trim() })
-                              }
-                            }}
-                          >
-                            驳回
-                          </Button>
-                        </PermissionGate>
+                          详情
+                        </Button>
                         <PermissionGate
                           allowed={canConvert}
                           reason={`缺少权限 ${PERMISSIONS.REPLENISHMENT.CONVERT}`}
@@ -211,6 +181,12 @@ export default function ReplenishmentBoard() {
           </Table>
         )}
       </TablePanel>
+
+      <ReplenishmentDetailDialog
+        suggestionId={detailId}
+        open={detailId != null}
+        onOpenChange={(next) => !next && setDetailId(null)}
+      />
     </div>
   )
 }
