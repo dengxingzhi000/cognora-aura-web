@@ -4,6 +4,31 @@ All notable changes to this project are documented in this file. The format foll
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project versions
 follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-11-14
+
+Covers everything merged after `v0.4.0` (`3e563d3`) — 2 non-merge commits.
+
+### Added
+
+- Smart replenishment screen: `/[locale]/inventory/replenishment` with a
+  suggestion list (generate, convert) and a detail panel for human review —
+  per-row quantity editing, adopt, reject with a mandatory reason, and the
+  frozen decision snapshot behind every suggested quantity (`#45`, `#46`).
+  The state machine (`editable` / `decidable` / `convertible`) is derived once
+  in the mapper so the UI cannot offer an action the backend rejects.
+- Inventory module gains 14 `inventory:replenishment:*` permission codes,
+  mirroring `033_replenishment_permissions.sql` one-to-one.
+- 24 mapper tests pinning the transition matrix and the flag parser; the parser
+  ignores unknown flags so a newer backend cannot break an older screen.
+
+### Notes
+
+The UI is wired to `platform-inventory`'s
+`/api/v1/inventory/replenishment/**`, which ships in
+`cognora-aura-platform`. This release is the frontend half only — the endpoints
+must be deployed, and the permission codes seeded (`033` runs from
+`scripts/db/seed/seed-all.*`), before the screen returns data.
+
 ## [0.4.0] - 2026-11-06
 
 Covers everything merged after `v0.3.0` (`33b9f80`) — 10 non-merge commits. The
