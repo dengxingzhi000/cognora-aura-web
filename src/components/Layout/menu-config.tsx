@@ -24,6 +24,7 @@ import {
   WalletOutlined,
   ContainerOutlined,
   SearchOutlined,
+  RobotOutlined,
 } from '@ant-design/icons'
 
 type MenuItem = Required<MenuProps>['items'][number]
@@ -105,6 +106,7 @@ export const appMenuItems: MenuItem[] = [
   getItem('通知管理', '/notification', <NotificationOutlined />),
   getItem('审批中心', '/approval', <AuditOutlined />),
   getItem('审计日志', '/audit', <SafetyCertificateOutlined />),
+  getItem('AI Agent', '/platform-agent', <RobotOutlined />),
   getItem('电商中心', 'group-ecommerce', <ShoppingOutlined />, [
     getItem('会员管理', '/ecommerce/members'),
     getItem('优惠券', '/ecommerce/coupons', <GiftOutlined />),

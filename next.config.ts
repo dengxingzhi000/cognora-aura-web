@@ -26,6 +26,7 @@ const targets = {
   tenant: process.env.API_TENANT_TARGET ?? "http://localhost:8212",
   document: process.env.API_DOCUMENT_TARGET ?? "http://localhost:8213",
   file: process.env.API_FILE_TARGET ?? "http://localhost:8214",
+  platformAgent: process.env.API_PLATFORM_AGENT_TARGET ?? "http://127.0.0.1:8217",
   analytics: process.env.API_ANALYTICS_TARGET ?? "http://localhost:8308",
   mall: process.env.API_MALL_TARGET ?? "http://localhost:8301",
   member: process.env.API_MEMBER_TARGET ?? "http://localhost:8302",
@@ -45,6 +46,9 @@ const nextConfig: NextConfig = {
       // Scoped to `/system/api`: the 系统管理 pages are on `/system/*`, so a bare
       // `/system/:path*` source would proxy those page navigations to scm-system.
       { source: "/system/api/:path*", destination: `${targets.system}/api/:path*` },
+      // Keep the workbench page at /platform-agent while proxying only its BFF API.
+      // :path* already contains v1/agent, matching gateway StripPrefix=1.
+      { source: "/platform-agent/api/:path*", destination: `${targets.platformAgent}/api/:path*` },
       { source: "/common/:path*", destination: `${targets.system}/:path*` },
       { source: "/scm-product/:path*", destination: `${targets.product}/:path*` },
       { source: "/scm-inventory/:path*", destination: `${targets.inventory}/:path*` },

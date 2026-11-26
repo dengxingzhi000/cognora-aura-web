@@ -12,4 +12,8 @@ describe("supplier menu group", () => {
     expect(matchMenuKey("/zh-CN/supplier/audit")).toBe("/supplier/audit");
     expect(getParentGroupKey("/zh-CN/supplier/audit")).toBe("group-supplier");
   });
+
+  it("matches the Agent workbench route", () => {
+    expect(matchMenuKey("/zh-CN/platform-agent")).toBe("/platform-agent");
+  });
 });

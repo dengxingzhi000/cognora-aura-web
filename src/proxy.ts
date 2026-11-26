@@ -7,7 +7,7 @@ const intlMiddleware = createMiddleware(routing)
 
 const publicPaths = ['/login', '/register', '/forgot-password']
 
-const API_PREFIXES = ['/auth', '/common', '/system/api']
+const API_PREFIXES = ['/auth', '/common', '/system/api', '/platform-agent/api']
 
 function isApiRequest(pathname: string): boolean {
   return (

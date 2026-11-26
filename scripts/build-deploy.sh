@@ -5,6 +5,19 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# These two are baked into the client bundle and silently break login when
+# missing: the tenant header is required by TenantFilter, and an unset API base
+# falls back to http://localhost:8761 in the browser.
+if [ -z "${NEXT_PUBLIC_DEFAULT_TENANT_ID:-}" ]; then
+  echo "NEXT_PUBLIC_DEFAULT_TENANT_ID is required for a deployable bundle" >&2
+  exit 1
+fi
+if [ -z "${NEXT_PUBLIC_API_BASE_URL+x}" ]; then
+  echo 'NEXT_PUBLIC_API_BASE_URL must be set; use "export NEXT_PUBLIC_API_BASE_URL=" for same-origin rewrites' >&2
+  exit 1
+fi
+echo "deploy env: tenant=${NEXT_PUBLIC_DEFAULT_TENANT_ID} api_base=${NEXT_PUBLIC_API_BASE_URL:-<same-origin>}"
+
 npm run build
 
 out="dist/cognora-aura-web"
